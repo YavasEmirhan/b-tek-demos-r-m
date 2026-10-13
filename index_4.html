@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="B-TEK: Bursa'da hidrolik ve pnömatik ekipman tedariki. Demo sürümü.">
+<title>B-TEK · Demo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Yerleşim: lacivert, ızgaralı bir "kontrol ekranı" açılışı ve çalışan devre; altında keskin köşeli, ince çizgili açık sayfa. Basınç rengi (kehribar) yalnızca eylem ve akış için. */
+:root {
+  --bg: #F3F5F8; --surface: #FFFFFF; --ink: #0F1B2D; --muted: #4B5668; --line: #CDD4DE;
+  --accent: #1F3A5F; --accent-ink: #FFFFFF; --tint: #E3E9F2;
+  --panel: #13243D; --panel-ink: #EEF2F8; --panel-muted: #9FB0C8; --gridline: #1E3352;
+  --signal: #F2A33A; --signal-ink: #1A1203; --wa: #0E7A3E;
+  --ok: #1E6B45; --warn: #8A4B00;
+  --display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0A1220; --surface: #121D30; --ink: #E8EDF5; --muted: #A3B0C4; --line: #263650;
+  --accent: #8FB3E8; --accent-ink: #0A1220; --tint: #18263D;
+  --panel: #0F1B2D; --panel-ink: #EEF2F8; --panel-muted: #9FB0C8; --gridline: #1C2C47;
+  --signal: #F2A33A; --signal-ink: #1A1203; --wa: #0E7A3E; --ok: #7FD3A3; --warn: #F0B462; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0A1220; --surface: #121D30; --ink: #E8EDF5; --muted: #A3B0C4; --line: #263650;
+  --accent: #8FB3E8; --accent-ink: #0A1220; --tint: #18263D;
+  --panel: #0F1B2D; --panel-ink: #EEF2F8; --panel-muted: #9FB0C8; --gridline: #1C2C47;
+  --signal: #F2A33A; --signal-ink: #1A1203; --wa: #0E7A3E; --ok: #7FD3A3; --warn: #F0B462; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; padding-inline: 16px; }
+* { box-sizing: border-box; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { font-family: var(--display); font-stretch: 112%; text-wrap: balance; line-height: 1.08; letter-spacing: -0.015em; }
+h1 { font-size: clamp(32px, 5vw, 50px); font-weight: 800; }
+h2 { font-size: 24px; font-weight: 700; }
+h3 { font-size: 18px; font-weight: 700; }
+.big { font-size: clamp(30px, 4.6vw, 48px); font-weight: 800; }
+a { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+.wrap { max-width: 1200px; margin-inline: auto; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.grow { flex: 1 1 0; min-width: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.mono { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 500; display: flex; align-items: center; gap: 10px; }
+.eyebrow::before { content: ''; width: 28px; height: 2px; background: var(--signal); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes flow { to { stroke-dashoffset: -18; } }
+@keyframes tick { to { transform: translateX(-50%); } }
+@keyframes slideflow { to { background-position: 16px 0; } }
+#app > * { animation: fade .35s ease both; }
+#app.nofade > * { animation: none; }
+.rv.in { animation: rise .7s cubic-bezier(.2, .7, .2, 1) both; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); color: var(--panel-ink); margin-inline: -16px; padding-inline: 16px; }
+.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 24px; padding-block: 10px; }
+.brand { font-family: var(--display); font-stretch: 120%; font-weight: 900; font-size: 24px; letter-spacing: 0.02em; color: var(--panel-ink); text-decoration: none; }
+.nav { display: flex; flex-wrap: wrap; gap: 2px; flex: 1 1 auto; }
+.nav a { position: relative; padding: 11px 12px; text-decoration: none; color: var(--panel-muted); font-weight: 500; transition: color .2s; }
+.nav a::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 6px; height: 2px; background: var(--signal); transform: scaleX(0); transform-origin: left; transition: transform .25s; }
+.nav a:hover, .nav a[aria-current="page"] { color: var(--panel-ink); }
+.nav a:hover::after, .nav a[aria-current="page"]::after { transform: scaleX(1); }
+.demo-note { padding-block: 10px; font-size: 13px; color: var(--muted); font-family: var(--mono); }
+main { padding-block: 20px 64px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; border-radius: 4px; border: 1px solid var(--signal); background: var(--signal); color: var(--signal-ink); font: 600 16px var(--sans); text-decoration: none; cursor: pointer; transition: transform .15s, box-shadow .15s, background .15s; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 -2px var(--ink); }
+.btn:active { transform: none; box-shadow: none; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn.sm { min-height: 44px; padding: 0 16px; font-size: 15px; }
+.btn.on-panel:hover { box-shadow: 0 6px 0 -2px var(--panel-muted); }
+.btn.on-panel.ghost { background: transparent; color: var(--panel-ink); border-color: var(--panel-muted); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 24px; }
+.panel { background: var(--panel); color: var(--panel-ink); border-radius: 6px; padding: 24px; }
+.panel .muted { color: var(--panel-muted); }
+.panel .eyebrow { color: var(--panel-muted); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.tile { display: flex; flex-direction: column; gap: 8px; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; text-decoration: none; color: var(--ink); transition: transform .2s, border-color .2s, box-shadow .2s; }
+.tile b { font-family: var(--display); font-stretch: 112%; font-size: 19px; line-height: 1.15; }
+.tile span { color: var(--muted); font-size: 15px; }
+.tile em { margin-top: auto; padding-top: 10px; font-style: normal; font-weight: 600; color: var(--accent); transition: transform .2s; }
+a.tile:hover { transform: translateY(-5px); border-color: var(--ink); box-shadow: 6px 6px 0 var(--signal); }
+a.tile:hover em { transform: translateX(6px); }
+.pill { display: inline-block; padding: 3px 9px; border-radius: 3px; font-family: var(--mono); font-size: 12px; font-weight: 500; background: var(--tint); }
+.pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); }
+
+label { font-weight: 600; font-size: 15px; }
+input[type="text"], input[type="search"], input[type="email"], input[type="number"], textarea, select {
+  width: 100%; min-height: 48px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 400 16px var(--sans); transition: border-color .15s; }
+input:focus, textarea:focus { border-color: var(--ink); }
+textarea { min-height: 90px; resize: vertical; }
+input.qty { width: 84px; font-family: var(--mono); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.search { display: flex; flex-wrap: wrap; gap: 10px; }
+.search input { flex: 1 1 260px; min-height: 56px; border: 2px solid var(--ink); font-family: var(--mono); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { min-height: 44px; padding: 0 16px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 15px var(--sans); cursor: pointer; transition: border-color .15s, background .15s; }
+.chip:hover { border-color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+.tablebox { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+table { width: 100%; min-width: 640px; border-collapse: collapse; text-align: left; }
+th { padding: 12px 16px; font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+td { padding: 10px 16px; border-top: 1px solid var(--line); vertical-align: middle; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: var(--tint); }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+
+.choice { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.choice button { min-height: 72px; padding: 10px; border-radius: 4px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: 600 16px var(--sans); cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.choice button:hover { border-color: var(--ink); transform: translateY(-3px); box-shadow: 4px 4px 0 var(--signal); }
+.bar { height: 4px; background: var(--line); }
+.bar i { display: block; height: 4px; background: var(--signal); transition: width .4s ease; }
+.drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 150px; padding: 20px; border: 2px dashed var(--line); border-radius: 6px; text-align: center; color: var(--muted); cursor: pointer; transition: border-color .2s, background .2s; }
+.drop:hover { border-color: var(--accent); background: var(--tint); }
+.thumbs { display: flex; flex-wrap: wrap; gap: 10px; }
+.thumbs figure { margin: 0; width: 96px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); animation: fade .3s both; }
+.thumbs img { width: 96px; height: 96px; object-fit: cover; border-radius: 4px; }
+.cand { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); animation: fade .3s both; }
+
+.out { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.out div { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; background: var(--panel); color: var(--panel-ink); border-radius: 4px; }
+.out .muted { color: var(--panel-muted); }
+.out b { font-family: var(--mono); font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--signal); }
+input[type="range"] { width: 100%; height: 44px; accent-color: var(--accent); }
+
+.circuitbox { overflow-x: auto; }
+.circuit { position: relative; width: 660px; height: 150px; }
+.circuit .ln { position: absolute; height: 3px; background: repeating-linear-gradient(90deg, var(--signal) 0 10px, transparent 10px 16px); animation: slideflow .6s linear infinite; }
+.circuit .ln.ret { background: repeating-linear-gradient(90deg, var(--muted) 0 5px, transparent 5px 16px); animation-direction: reverse; animation-duration: 1.2s; }
+.circuit button { position: absolute; top: 20px; width: 120px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-radius: 4px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px var(--sans); cursor: pointer; transition: transform .15s, border-color .15s; }
+.circuit button:hover { transform: translateY(-3px); border-color: var(--ink); }
+.circuit button[aria-pressed="true"] { border-color: var(--ink); box-shadow: 4px 4px 0 var(--signal); font-weight: 600; }
+.circuit svg { stroke: currentColor; fill: none; stroke-width: 1.6; }
+
+.mail { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow: hidden; animation: fade .35s both; }
+.mail header { padding: 14px 18px; background: var(--tint); display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.mail .body { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.mail dl { margin: 0; display: grid; grid-template-columns: minmax(90px, auto) 1fr; gap: 6px 16px; font-size: 15px; }
+.mail dt { color: var(--muted); } .mail dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.steps { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); counter-reset: s; padding: 0; margin: 0; list-style: none; }
+.steps li { counter-increment: s; display: flex; flex-direction: column; gap: 4px; padding-top: 12px; border-top: 2px solid var(--ink); }
+.steps li::before { content: '0' counter(s); font-family: var(--mono); color: var(--accent); font-weight: 500; }
+
+/* Açılış */
+.hero { background-color: var(--panel); background-image: linear-gradient(var(--gridline) 1px, transparent 1px), linear-gradient(90deg, var(--gridline) 1px, transparent 1px); background-size: 32px 32px; color: var(--panel-ink); border-radius: 6px; display: flex; flex-wrap: wrap; align-items: stretch; overflow: hidden; }
+.hero-copy { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.hero-view { overflow: hidden; }
+.hero-track { display: flex; transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+.slide { flex: 0 0 100%; min-width: 0; padding: clamp(24px, 4.5vw, 52px); padding-bottom: 12px; }
+.slide .eyebrow { color: var(--panel-muted); }
+.slide .lead { color: var(--panel-muted); font-size: 18px; max-width: 46ch; }
+.hero-ctl { display: flex; align-items: center; gap: 4px; padding: 4px clamp(16px, 4vw, 44px) 20px; }
+.arrow { width: 44px; height: 44px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; transition: background .15s, color .15s; }
+.arrow:hover { background: var(--ink); color: var(--bg); }
+.arrow.on-panel { background: transparent; color: var(--panel-ink); border-color: var(--panel-muted); }
+.arrow.on-panel:hover { background: var(--panel-ink); color: var(--panel); }
+.dot { width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; }
+.dot::before { content: ''; width: 16px; height: 3px; background: var(--panel-muted); opacity: .5; transition: width .3s, background .3s; }
+.dot[aria-current="true"]::before { width: 36px; opacity: 1; background: var(--signal); }
+.rig { flex: 1 1 380px; min-width: 0; padding: clamp(16px, 3vw, 32px); display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+.rigsvg { width: 100%; height: auto; display: block; fill: none; stroke: var(--panel-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rigsvg .fillbg { fill: var(--panel); }
+.rigsvg .solid { fill: var(--panel-ink); stroke: none; }
+.rigsvg .ln { stroke-width: 3; }
+.rigsvg .press { stroke: var(--signal); stroke-dasharray: 10 8; animation: flow .7s linear infinite; }
+.rigsvg .ret { stroke: var(--panel-muted); stroke-dasharray: 4 14; animation: flow 1.4s linear infinite reverse; }
+.rigsvg .thin { stroke: var(--panel-muted); stroke-width: 1; }
+.rigsvg text { fill: var(--panel-muted); stroke: none; font: 500 11px var(--mono); }
+.spool { transition: transform .35s cubic-bezier(.3, 1.4, .5, 1); }
+.readout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--gridline); }
+.readout div { padding: 10px 12px 0 0; display: flex; flex-direction: column; }
+.readout span { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--panel-muted); }
+.readout b { font-family: var(--mono); font-size: clamp(16px, 2.4vw, 22px); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--signal); }
+.ticker { overflow: hidden; margin-inline: -16px; border-block: 1px solid var(--line); padding-block: 14px; }
+.ticker-in { display: flex; width: max-content; animation: tick 38s linear infinite; }
+.ticker:hover .ticker-in { animation-play-state: paused; }
+.ticker span { font-family: var(--display); font-stretch: 120%; font-weight: 900; font-size: clamp(28px, 5vw, 54px); line-height: 1; white-space: nowrap; padding-right: 36px; color: transparent; -webkit-text-stroke: 1px var(--muted); }
+.ticker span:nth-child(odd) { color: var(--ink); -webkit-text-stroke: 0; }
+
+.about { display: flex; flex-wrap: wrap; gap: 28px 56px; align-items: start; }
+.about > .stack { flex: 2 1 360px; min-width: 0; }
+.facts { flex: 1 1 260px; margin: 0; display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--ink); }
+.facts div { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.facts dt { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.facts dd { margin: 0; font-family: var(--display); font-stretch: 112%; font-size: 24px; font-weight: 800; }
+.strip { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; padding: 6px 6px 14px 0; }
+.strip > * { flex: 0 0 230px; scroll-snap-align: start; }
+.gcard { display: flex; flex-direction: column; gap: 6px; padding: 20px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: 400 15px var(--sans); text-align: left; cursor: pointer; transition: transform .2s, border-color .2s, box-shadow .2s; }
+.gcard b { font-family: var(--display); font-stretch: 112%; font-size: 19px; } .gcard span { color: var(--muted); }
+.gcard .gicon { width: 76px; height: 54px; color: var(--accent); display: flex; align-items: center; transition: transform .3s; }
+.gicon svg { width: 100%; height: auto; display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.gcard:hover { transform: translateY(-5px); border-color: var(--ink); box-shadow: 6px 6px 0 var(--signal); }
+.gcard:hover .gicon { transform: translateX(8px); }
+.brandslot { height: 88px; display: grid; place-items: center; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: .08em; }
+.contact { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; padding: clamp(24px, 4vw, 44px); background-image: linear-gradient(var(--gridline) 1px, transparent 1px), linear-gradient(90deg, var(--gridline) 1px, transparent 1px); background-size: 32px 32px; }
+
+
+.tools { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+.toollist { flex: 1 1 240px; display: flex; flex-direction: column; border-top: 2px solid var(--ink); }
+.toollist button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 64px; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); font: 400 14px var(--sans); text-align: left; cursor: pointer; transition: background .15s, padding .2s; }
+.toollist button b { font-family: var(--display); font-stretch: 112%; font-size: 17px; }
+.toollist button span { color: var(--muted); }
+.toollist button:hover { background: var(--tint); padding-left: 20px; }
+.toollist button[aria-pressed="true"] { background: var(--panel); color: var(--panel-ink); box-shadow: inset 4px 0 0 var(--signal); }
+.toollist button[aria-pressed="true"] span { color: var(--panel-muted); }
+.toolbody { flex: 999 1 560px; min-width: 0; animation: fade .3s both; }
+.unit { display: flex; align-items: stretch; }
+.unit input { border-radius: 4px 0 0 4px; font-family: var(--mono); font-size: 17px; min-width: 0; }
+.unit span { display: flex; align-items: center; padding: 0 12px; border: 1px solid var(--line); border-left: 0; border-radius: 0 4px 4px 0; background: var(--tint); color: var(--muted); font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.out b small { font-size: 14px; color: var(--panel-muted); }
+
+.foot { background: var(--panel); color: var(--panel-ink); margin-inline: -16px; padding: 40px 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
+.foot .wrap { display: flex; flex-wrap: wrap; gap: 28px 48px; align-items: flex-start; }
+.foot .muted { color: var(--panel-muted); }
+.contactlist { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px 24px; }
+.contactlist dt { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--panel-muted); }
+.contactlist dd { margin: 0; font-size: 16px; overflow-wrap: anywhere; user-select: all; }
+.footnav { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 4px 20px; padding-top: 20px; border-top: 1px solid var(--gridline); }
+.footnav a { color: var(--panel-ink); text-decoration: none; padding: 10px 0; }
+.footnav a:hover { color: var(--signal); }
+.footnav span { padding: 10px 0; }
+.wa { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 6; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 18px; border-radius: 24px; background: var(--wa); color: #FFFFFF; font: 600 15px var(--sans); text-decoration: none; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); transition: transform .15s; }
+.wa:hover { transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#ana">B-TEK</a>
+    <nav class="nav" aria-label="Ana menü">
+      <a href="#ana" data-nav="ana">Kurumsal</a>
+      <a href="#katalog" data-nav="katalog">Katalog</a>
+      <a href="#tani" data-nav="tani">Parça tanı</a>
+      <a href="#araclar" data-nav="araclar">Hesaplama</a>
+      <a href="#devre" data-nav="devre">Devreler</a>
+    </nav>
+    <a class="btn sm" href="#teklif">Teklif listesi · <span id="count">0</span></a>
+  </div>
+</header>
+<div class="wrap demo-note">Demo sürümü: katalog 20 örnek ürünle çalışır, kodlar ve stok durumları temsilidir. Gerçek ürün listesi bağlanınca aynı ekranlar onunla çalışacak.</div>
+<main class="wrap" id="app"></main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="stack" style="gap:8px;flex:2 1 260px"><span class="brand">B-TEK</span><p class="muted">Hidrolik ve pnömatik ekipman tedariki · Bursa</p></div>
+    <dl class="contactlist" style="flex:3 1 420px">
+      <div><dt>Yetkili</dt><dd>Emirhan Yavaş</dd></div>
+      <div><dt>Telefon ve WhatsApp</dt><dd class="mono">+90 (507) 158 1546</dd></div>
+      <div><dt>E-posta</dt><dd class="mono">info@b-tek.com.tr</dd></div>
+      <div><dt>Ek e-posta</dt><dd class="mono">yavas.emirhan@outlook.com</dd></div>
+    </dl>
+    <nav class="footnav" aria-label="Alt menü"><a href="#ana">Kurumsal</a><a href="#katalog">Katalog</a><a href="#tani">Parça tanı</a><a href="#araclar">Hesaplama</a><a href="#devre">Devreler</a><a href="#teklif">Teklif listesi</a><span class="muted">KVKK aydınlatma metni (hazırlanacak)</span></nav>
+  </div>
+</footer>
+<a class="wa" href="https://wa.me/905071581546" target="_blank" rel="noopener" aria-label="WhatsApp ile yazın"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.4-4.2A8 8 0 1 1 8.2 18.6z"></path><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"></path></svg><span>WhatsApp</span></a>
+
+<script>
+/* Canlı sitede buraya Netlify fonksiyonunun adresi yazılır: '/api/talep'. Boşken e-posta gönderilmez, önizleme gösterilir. */
+var ENDPOINT = '';
+var MAIL_TO = 'info@b-tek.com.tr';
+var MAIL_ALT = 'yavas.emirhan@outlook.com';
+var PHONE = '+90 (507) 158 1546';
+var WA = 'https://wa.me/905071581546';
+
+var PRODUCTS = [
+  ['Rakor', 'Dirsek rakor, erkek–dişi, çelik', 'G 1/2', true],
+  ['Rakor', 'Dirsek rakor, erkek–erkek, çelik', 'G 1/2', true],
+  ['Rakor', 'Düz rakor, erkek–erkek, çelik', 'G 1/4', true],
+  ['Rakor', 'Düz rakor, erkek–erkek, çelik', 'G 3/8', true],
+  ['Rakor', 'Te rakor, paslanmaz', 'G 1/2', false],
+  ['Rakor', 'Düz rakor, pirinç', 'NPT 1/2', true],
+  ['Rakor', 'Hızlı bağlantı rakoru, Ø8 hortum', 'G 1/4', true],
+  ['Valf', '5/2 bobinli yön valfi, 24 V DC', 'G 1/4', true],
+  ['Valf', '5/2 bobinli yön valfi, 220 V AC', 'G 1/4', false],
+  ['Valf', '5/3 bobinli yön valfi, kapalı merkez', 'G 1/4', true],
+  ['Valf', '3/2 kollu valf', 'G 1/8', true],
+  ['Valf', 'Hız ayar valfi', 'G 1/4', true],
+  ['Silindir', 'Çift etkili pnömatik silindir, strok 50', 'Ø32', true],
+  ['Silindir', 'Çift etkili pnömatik silindir, strok 100', 'Ø63', true],
+  ['Silindir', 'Çift etkili pnömatik silindir, strok 200', 'Ø63', false],
+  ['Silindir', 'Çift etkili pnömatik silindir, strok 250', 'Ø100', true],
+  ['Şartlandırıcı', 'Filtre, regülatör, yağlayıcı takımı', 'G 1/2', true],
+  ['Şartlandırıcı', 'Filtre regülatör', 'G 1/4', true],
+  ['Hortum', 'Poliüretan hortum', 'Ø8', true],
+  ['Hortum', 'Hidrolik hortum, 2 tel örgülü', '1/2"', false]
+].map(function (p, i) {
+  var code = 'ÖRNEK-' + String(i + 1).padStart(3, '0');
+  var o = { id: 'p' + i, code: code, cat: p[0], name: p[1], size: p[2], stock: p[3] };
+  o.hay = norm(code + ' ' + p[0] + ' ' + p[1] + ' ' + p[2] + (p[2].indexOf('G ') === 0 ? ' bsp bspp' : ''));
+  return o;
+});
+var CATS = ['Tümü', 'Rakor', 'Valf', 'Silindir', 'Şartlandırıcı', 'Hortum'];
+
+var S = { q: '', cat: 'Tümü', onlyStock: false, list: [], photos: [], wiz: { step: 0 }, node: 'valf', sent: null, d: 63, p: 6 };
+var app = document.getElementById('app');
+
+function norm(s) { return String(s).toLocaleLowerCase('tr-TR').replace(/ø/g, '').replace(/[^a-z0-9çğıöşü\/.]+/g, ' ').trim(); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function num(n, d) { return n.toLocaleString('tr-TR', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function route() { var h = location.hash.replace('#', ''); return ['katalog', 'tani', 'araclar', 'devre', 'teklif'].indexOf(h) >= 0 ? h : 'ana'; }
+function go(h) { if (location.hash === '#' + h) render(); else location.hash = h; }
+
+function addItem(key, label, detail, qty) {
+  var it = S.list.filter(function (x) { return x.key === key; })[0];
+  if (it) it.qty += qty || 1; else S.list.push({ key: key, label: label, detail: detail, qty: qty || 1 });
+  S.sent = null; updateCount();
+}
+function updateCount() { document.getElementById('count').textContent = S.list.length; }
+
+/* ---------- Ana sayfa ---------- */
+document.documentElement.lang = 'tr';
+var slide = 0, slideTimer = null, SLIDES = 3;
+var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+var ART = {
+  valf: '<svg viewBox="0 0 60 44"><rect x="6" y="10" width="24" height="24"></rect><rect x="30" y="10" width="24" height="24"></rect><path d="M12 30V16M9 19l3-3 3 3"></path><path d="M24 16v14M21 27l3 3 3-3"></path><path d="M36 30l12-14M36 16l12 14"></path></svg>',
+  silindir: '<svg viewBox="0 0 80 44"><rect x="4" y="12" width="48" height="20"></rect><path d="M22 12v20M22 22h54"></path></svg>',
+  rakor: '<svg viewBox="0 0 60 44"><path d="M16 8h18l8 14-8 14H16L8 22z"></path><path d="M42 14h12v16H42"></path></svg>',
+  frl: '<svg viewBox="0 0 60 44"><path d="M30 4l18 18-18 18-18-18z"></path><path d="M30 4v36" stroke-dasharray="3 3"></path></svg>',
+  hortum: '<svg viewBox="0 0 60 44"><path d="M6 34c10 0 12-24 24-24s14 24 24 24"></path><path d="M6 28v12M54 28v12"></path></svg>'
+};
+/* Çalışan devre: Ø63 silindir, Ø20 mil, 200 mm strok, 6 bar */
+var RIG = { pos: 0, dir: 1, wait: 0, last: 0, raf: 0, fExt: Math.round(600000 * Math.PI * 0.063 * 0.063 / 4), fRet: Math.round(600000 * Math.PI * (0.063 * 0.063 - 0.02 * 0.02) / 4) };
+function rigSvg() {
+  return '<svg class="rigsvg" viewBox="0 0 560 350" role="img" aria-label="Çalışan pnömatik devre: valf konum değiştirir, silindir ileri geri hareket eder">' +
+    '<path id="lnA" class="ln" d="M165 220V170H80V104"></path><path id="lnB" class="ln" d="M195 220V150H280V104"></path>' +
+    '<path class="ln press" d="M40 310H180V270"></path>' +
+    '<circle cx="40" cy="310" r="16" class="fillbg"></circle><path d="M35 302l12 8-12 8z"></path>' +
+    '<path d="M110 292l18 18-18 18-18-18z" class="fillbg"></path>' +
+    '<path class="thin" d="M160 270v12m-6 0h12l-6 9zM200 270v12m-6 0h12l-6 9z"></path>' +
+    '<rect x="60" y="40" width="240" height="64" rx="3" class="fillbg"></rect>' +
+    '<g id="rod"><rect x="72" y="41" width="14" height="62" class="solid"></rect><rect x="86" y="64" width="230" height="16" class="solid"></rect><circle cx="326" cy="72" r="10" class="fillbg"></circle></g>' +
+    '<path class="thin" d="M326 120h200M326 114v12M376 116v8M426 114v12M476 116v8M526 114v12"></path>' +
+    '<text x="326" y="142" text-anchor="middle">0</text><text x="426" y="142" text-anchor="middle">100</text><text x="526" y="142" text-anchor="middle">200 mm</text>' +
+    '<text x="60" y="30">Ø63 SİLİNDİR</text><text x="284" y="250">5/2 VALF</text><text x="24" y="282">6 BAR</text>' +
+    '<g id="spool" class="spool"><rect x="120" y="220" width="60" height="50" class="fillbg"></rect><rect x="180" y="220" width="60" height="50" class="fillbg"></rect>' +
+      '<path d="M135 262V228m-4 6l4-6 4 6M165 228v34m-4-6l4 6 4-6M195 262l30-34M225 262l-30-34"></path></g>' +
+  '</svg>';
+}
+function rigApply() {
+  var rod = document.getElementById('rod'); if (!rod) return;
+  rod.setAttribute('transform', 'translate(' + (RIG.pos * 200).toFixed(1) + ' 0)');
+  document.getElementById('rPos').textContent = Math.round(RIG.pos * 200) + ' mm';
+}
+function rigState() {
+  var sp = document.getElementById('spool'); if (!sp) return;
+  sp.style.transform = 'translateX(' + (RIG.dir > 0 ? 30 : -30) + 'px)';
+  document.getElementById('lnA').setAttribute('class', 'ln ' + (RIG.dir > 0 ? 'press' : 'ret'));
+  document.getElementById('lnB').setAttribute('class', 'ln ' + (RIG.dir > 0 ? 'ret' : 'press'));
+  document.getElementById('rDir').textContent = RIG.dir > 0 ? 'İtme' : 'Çekme';
+  document.getElementById('rF').textContent = num(RIG.dir > 0 ? RIG.fExt : RIG.fRet, 0) + ' N';
+}
+function rigTick(ts) {
+  if (!document.getElementById('rod')) { RIG.raf = 0; return; }
+  var dt = Math.min(64, ts - (RIG.last || ts)); RIG.last = ts;
+  if (RIG.wait > 0) { RIG.wait -= dt; if (RIG.wait <= 0) { RIG.dir = -RIG.dir; rigState(); } }
+  else {
+    RIG.pos += RIG.dir * dt / 2400;
+    if (RIG.pos >= 1 || RIG.pos <= 0) { RIG.pos = Math.max(0, Math.min(1, RIG.pos)); RIG.wait = 1100; }
+    rigApply();
+  }
+  RIG.raf = requestAnimationFrame(rigTick);
+}
+function startRig() {
+  cancelAnimationFrame(RIG.raf); RIG.raf = 0;
+  if (!document.getElementById('rod')) return;
+  if (REDUCED) { RIG.pos = 0.6; RIG.dir = 1; }
+  rigState(); rigApply();
+  if (!REDUCED) { RIG.last = 0; RIG.raf = requestAnimationFrame(rigTick); }
+}
+function reveal() {
+  var els = document.querySelectorAll('.rv');
+  if (REDUCED || !('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px' });
+  els.forEach(function (el) { io.observe(el); });
+}
+function heroSlide(tag, eyebrow, title, text, btns) {
+  return '<div class="slide" role="group" aria-roledescription="slayt"><div class="stack">' +
+    '<span class="eyebrow">' + eyebrow + '</span><' + tag + ' class="big">' + title + '</' + tag + '><p class="lead">' + text + '</p><div class="row">' + btns + '</div></div></div>';
+}
+function strip(id, label, inner) {
+  return '<div class="row"><h2 class="grow big">' + label + '</h2>' +
+    '<button type="button" class="arrow" data-act="strip" data-v="' + id + '" data-dir="-1" aria-label="' + label + ': geri">‹</button>' +
+    '<button type="button" class="arrow" data-act="strip" data-v="' + id + '" data-dir="1" aria-label="' + label + ': ileri">›</button></div>' +
+    '<div class="strip" id="' + id + '" tabindex="0" aria-label="' + label + '">' + inner + '</div>';
+}
+function vAna() {
+  var groups = [['Valf', 'Valfler', 'Yön kontrol, hız ayar, el kumandalı', ART.valf], ['Silindir', 'Silindirler', 'Pnömatik ve hidrolik, standart çaplar', ART.silindir],
+    ['Rakor', 'Rakor ve bağlantı', 'Düz, dirsek, te; G, NPT, metrik', ART.rakor], ['Şartlandırıcı', 'Şartlandırıcılar', 'Filtre, regülatör, yağlayıcı', ART.frl], ['Hortum', 'Hortum ve boru', 'Poliüretan, hidrolik örgülü', ART.hortum]];
+  var words = ['VALF', 'SİLİNDİR', 'PİSTON', 'RAKOR', 'BAĞLANTI ELEMANLARI', 'ŞARTLANDIRICI', 'HORTUM', 'HİDROLİK', 'PNÖMATİK', 'BURSA'];
+  var tick = words.concat(words).map(function (w) { return '<span>' + w + '</span>'; }).join('');
+  return '<div class="stack" style="gap:48px">' +
+    '<section class="hero" aria-roledescription="slayt gösterisi" aria-label="Öne çıkanlar"><div class="hero-copy"><div class="hero-view"><div class="hero-track" id="heroTrack">' +
+      heroSlide('h1', 'Bursa · Hidrolik ve pnömatik', 'Makinenizi hareket ettiren her parça.', 'Valf, silindir, piston, rakor ve bağlantı elemanları. Listenizi gönderin; stok ve terminle dönelim.',
+        '<a class="btn on-panel" href="#katalog">Kataloğu açın →</a><a class="btn on-panel ghost" href="#teklif">Teklif isteyin</a>') +
+      heroSlide('h2', 'Parça tanıma', 'Adını bilmediğiniz parçayı biz bulalım.', 'Diş ölçüsünü girin ya da fotoğrafını gönderin. Karşılığını çıkarıp teklife ekleyelim.',
+        '<a class="btn on-panel" href="#tani">Parçayı tanıtın →</a>') +
+      heroSlide('h2', 'Mühendislik desteği', 'Önce hesaplayın, sonra doğru parçayı seçin.', 'Silindir kuvvetini hesaplayın, devre şemasından malzeme listesini çıkarın.',
+        '<a class="btn on-panel" href="#araclar">Hesaplamaya gidin →</a><a class="btn on-panel ghost" href="#devre">Devreleri görün</a>') +
+    '</div></div><div class="hero-ctl">' +
+      '<button type="button" class="arrow on-panel" data-act="slide" data-v="prev" aria-label="Önceki slayt">‹</button>' +
+      [0, 1, 2].map(function (i) { return '<button type="button" class="dot" data-act="slide" data-v="' + i + '" aria-label="Slayt ' + (i + 1) + '"></button>'; }).join('') +
+      '<button type="button" class="arrow on-panel" data-act="slide" data-v="next" aria-label="Sonraki slayt">›</button></div></div>' +
+      '<div class="rig">' + rigSvg() +
+        '<div class="readout"><div><span>Konum</span><b id="rPos">0 mm</b></div><div><span>Yön</span><b id="rDir">İtme</b></div><div><span>Kuvvet</span><b id="rF"></b></div></div>' +
+        '<div><button type="button" class="btn on-panel ghost sm" data-act="rigToggle">Valfi değiştir</button></div></div></section>' +
+
+    '<div class="ticker" aria-hidden="true"><div class="ticker-in">' + tick + '</div></div>' +
+
+    '<form class="search rv" id="homeSearch"><label for="homeQ" style="flex-basis:100%">Katalogda arayın</label>' +
+      '<input type="search" id="homeQ" placeholder="örn. 1/2 bsp dirsek"><button class="btn" type="submit" style="min-height:56px">Ara →</button></form>' +
+
+    '<section class="about rv"><div class="stack"><span class="eyebrow">Hakkımızda</span><h2 class="big">Doğru parça, net termin.</h2>' +
+      '<p style="max-width:62ch;font-size:18px">B-TEK, Bursa\'da makine imalatçılarına hidrolik ve pnömatik ekipman tedarik eder. Valf, silindir, piston, rakor ve bağlantı elemanlarını tek yerden, teklifle sağlar.</p>' +
+      '<p class="muted" style="max-width:62ch">İhtiyacınızı önce birlikte netleştiriyoruz: hangi parça, hangi ölçü, kaç adet. Ardından uygun ürünü stok ve termin bilgisiyle teklif ediyoruz. Kodunu bilmediğiniz parçada ölçüden ve fotoğraftan yola çıkıyoruz.</p></div>' +
+      '<dl class="facts"><div><dt>Merkez</dt><dd>Bursa</dd></div><div><dt>Alan</dt><dd>Hidrolik, pnömatik</dd></div><div><dt>Satış</dt><dd>Teklifle</dd></div><div><dt>İletişim</dt><dd>Telefon, WhatsApp</dd></div></dl></section>' +
+
+    '<section class="stack rv"><span class="eyebrow">Hizmetler</span><h2 class="big">Neler yapıyoruz?</h2><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">' +
+      '<a class="tile" href="#katalog"><b>Ürün tedariki</b><span>Kod, ölçü ya da adla arayın; satırdan teklif listesine ekleyin.</span><em>Kataloğa git →</em></a>' +
+      '<a class="tile" href="#tani"><b>Parça tanıma</b><span>Kodu bilinmeyen parçayı ölçüden ya da fotoğraftan buluruz.</span><em>Parçayı tanıt →</em></a>' +
+      '<a class="tile" href="#araclar"><b>Seçim ve hesap desteği</b><span>Kuvvet hesabıyla doğru silindir çapına ulaşın.</span><em>Hesaplamaya git →</em></a>' +
+      '<a class="tile" href="#devre"><b>Devreye göre malzeme listesi</b><span>Şemadan başlayın; parçaları tek tıkla listeye alın.</span><em>Devreleri gör →</em></a>' +
+      '<a class="tile" href="#teklif"><b>Toplu teklif</b><span>Tüm kalemleri tek talepte gönderin; stok ve terminle dönelim.</span><em>Teklif listesi →</em></a>' +
+    '</div></section>' +
+
+    '<section class="stack rv">' + strip('groups', 'Ürün grupları', groups.map(function (g) {
+      return '<button type="button" class="gcard" data-act="catgo" data-v="' + g[0] + '"><span class="gicon" aria-hidden="true">' + g[3] + '</span><b>' + g[1] + '</b><span>' + g[2] + '</span></button>';
+    }).join('')) + '</section>' +
+
+    '<section class="stack rv"><span class="eyebrow">Süreç</span><h2 class="big">Teklif nasıl işler?</h2><ol class="steps">' +
+      '<li><b>Listeyi oluşturun</b><span class="muted">Katalogdan, parça tanıma sonucundan, hesaptan ya da devreden ekleyin.</span></li>' +
+      '<li><b>Tek seferde gönderin</b><span class="muted">Talep, fotoğraflarla birlikte bize e-postayla ulaşır.</span></li>' +
+      '<li><b>Stok ve terminle dönelim</b><span class="muted">Fiyatlar teklifle bildirilir.</span></li></ol></section>' +
+
+    '<section class="panel contact rv"><div class="stack grow"><span class="eyebrow">İletişim</span><h2 class="big">Listeniz hazırsa gönderin, değilse yazın.</h2>' +
+      '<dl class="contactlist"><div><dt>Yetkili</dt><dd>Emirhan Yavaş</dd></div><div><dt>Telefon ve WhatsApp</dt><dd class="mono">' + PHONE + '</dd></div><div><dt>E-posta</dt><dd class="mono">' + MAIL_TO + '</dd></div><div><dt>Ek e-posta</dt><dd class="mono">' + MAIL_ALT + '</dd></div><div><dt>Konum</dt><dd>Bursa</dd></div></dl></div>' +
+      '<div class="row"><a class="btn on-panel" href="#teklif">Teklif isteyin →</a><a class="btn on-panel ghost" href="' + WA + '" target="_blank" rel="noopener">WhatsApp\'tan yazın</a></div></section>' +
+  '</div>';
+}
+function setSlide(n) {
+  var t = document.getElementById('heroTrack'); if (!t) return;
+  slide = (n + SLIDES) % SLIDES;
+  t.style.transform = 'translateX(-' + slide * 100 + '%)';
+  Array.prototype.forEach.call(t.children, function (c, i) { c.inert = i !== slide; });
+  document.querySelectorAll('.dot').forEach(function (d, i) { if (i === slide) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+}
+function startSlides() {
+  clearInterval(slideTimer);
+  if (route() !== 'ana' || REDUCED) return;
+  slideTimer = setInterval(function () { if (!document.querySelector('.hero-copy:hover, .hero-copy:focus-within')) setSlide(slide + 1); }, 6500);
+}
+
+/* ---------- Katalog ---------- */
+function vKatalog() {
+  return '<div class="stack"><h1>Katalog</h1>' +
+    '<div class="search"><label for="q" class="small" style="flex-basis:100%">Kod, ölçü ya da ürün adı</label>' +
+      '<input type="search" id="q" value="' + esc(S.q) + '" placeholder="örn. G 1/4 valf, silindir 63"></div>' +
+    '<div class="chips" id="cats"></div>' +
+    '<div class="tablebox"><table><thead><tr><th>Kod</th><th>Tanım</th><th>Ölçü</th><th>Durum</th><th>Adet</th><th><span class="small" style="position:absolute;clip-path:inset(50%)">İşlem</span></th></tr></thead><tbody id="rows"></tbody></table></div>' +
+    '<p class="muted small" id="resInfo"></p></div>';
+}
+function fillKatalog() {
+  var cats = document.getElementById('cats'); if (!cats) return;
+  cats.innerHTML = CATS.map(function (c) { return '<button type="button" class="chip" data-act="cat" data-v="' + c + '" aria-pressed="' + (S.cat === c) + '">' + c + '</button>'; }).join('') +
+    '<button type="button" class="chip" data-act="stock" aria-pressed="' + S.onlyStock + '">Yalnızca stoktakiler</button>';
+  var toks = norm(S.q).split(' ').filter(Boolean);
+  var res = PRODUCTS.filter(function (p) {
+    if (S.cat !== 'Tümü' && p.cat !== S.cat) return false;
+    if (S.onlyStock && !p.stock) return false;
+    return toks.every(function (t) { return p.hay.indexOf(t) >= 0; });
+  });
+  document.getElementById('rows').innerHTML = res.length ? res.map(function (p) {
+    return '<tr><td class="mono">' + p.code + '</td><td>' + esc(p.name) + '<br><span class="muted small">' + p.cat + '</span></td><td class="mono">' + esc(p.size) + '</td>' +
+      '<td><span class="pill ' + (p.stock ? 'ok">Stokta' : 'warn">Termin sorun') + '</span></td>' +
+      '<td><input class="qty" type="number" min="1" value="1" id="qty-' + p.id + '" aria-label="Adet"></td>' +
+      '<td style="text-align:right"><button type="button" class="btn sm' + (p.stock ? '' : ' ghost') + '" data-act="add" data-v="' + p.id + '">Listeye ekle</button></td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty">Eşleşen ürün yok. <a href="#tani">Parçayı tanıtarak sorun</a> ya da aramayı kısaltın.</td></tr>';
+  document.getElementById('resInfo').textContent = res.length + ' örnek ürün gösteriliyor.';
+}
+
+/* ---------- Parça tanı ---------- */
+var THREADS = {
+  G: [['1/8', 9.728, 28], ['1/4', 13.157, 19], ['3/8', 16.662, 19], ['1/2', 20.955, 14], ['3/4', 26.441, 14], ['1', 33.249, 11]],
+  NPT: [['1/8', 10.287, 27], ['1/4', 13.716, 18], ['3/8', 17.145, 18], ['1/2', 21.336, 14], ['3/4', 26.670, 14], ['1', 33.401, 11.5]],
+  M: [['10x1', 10, 1], ['12x1.5', 12, 1.5], ['14x1.5', 14, 1.5], ['16x1.5', 16, 1.5], ['18x1.5', 18, 1.5], ['22x1.5', 22, 1.5], ['27x2', 27, 2]]
+};
+function candidates(w) {
+  var fams = w.taper === 'duz' ? ['G', 'M'] : w.taper === 'konik' ? ['R', 'NPT'] : ['G', 'NPT', 'M'];
+  var out = [];
+  fams.forEach(function (f) {
+    var tbl = THREADS[f === 'R' ? 'G' : f];
+    tbl.forEach(function (t) {
+      var pitch = f === 'M' ? t[2] : 25.4 / t[2];
+      var k = f === 'M' ? 1.0825 : f === 'NPT' ? 1.6 : 1.28;
+      var dia = w.gender === 'erkek' ? t[1] : t[1] - k * pitch;
+      out.push({ name: (f === 'M' ? 'M' : f + ' ') + t[0], dia: dia, diff: Math.abs(dia - w.mm), hint: f === 'M' ? num(t[2], 1) + ' mm hatve' : String(t[2]).replace('.', ',') + ' diş/inç' });
+    });
+  });
+  return out.filter(function (c) { return c.diff <= 1; }).sort(function (a, b) { return a.diff - b.diff; }).slice(0, 3);
+}
+function vWizard() {
+  var w = S.wiz, pct = [10, 35, 60, 85, 100][w.step];
+  var head = '<div class="row"><h2 class="grow">Sorularla bulun</h2>' + (w.step < 4 ? '<span class="muted small">Soru ' + (w.step + 1) + ' / 4</span>' : '') + '</div><div class="bar"><i style="width:' + pct + '%"></i></div>';
+  var body;
+  if (w.step === 0) body = '<h3>Parça ne tür bir şey?</h3><div class="choice">' +
+    '<button type="button" data-act="wz" data-k="kind" data-v="rakor">Rakor ya da bağlantı</button><button type="button" data-act="wz" data-k="kind" data-v="valf">Valf</button><button type="button" data-act="wz" data-k="kind" data-v="silindir">Silindir</button></div>';
+  else if (w.kind !== 'rakor') body = '<h3>Bu demoda soru ağacı rakorlar için hazır.</h3><p class="muted">' + (w.kind === 'valf' ? 'Valf' : 'Silindir') + ' için fotoğrafı ve etiket bilgisini aşağıdaki formdan gönderin; biz tanıyalım.</p>';
+  else if (w.step === 1) body = '<h3>Diş parçanın dışında mı, içinde mi?</h3><div class="choice">' +
+    '<button type="button" data-act="wz" data-k="gender" data-v="erkek">Dışında (erkek)</button><button type="button" data-act="wz" data-k="gender" data-v="disi">İçinde (dişi)</button></div>';
+  else if (w.step === 2) body = '<h3>Diş uca doğru daralıyor mu?</h3><div class="choice">' +
+    '<button type="button" data-act="wz" data-k="taper" data-v="duz">Hayır, düz</button><button type="button" data-act="wz" data-k="taper" data-v="konik">Evet, konik</button><button type="button" data-act="wz" data-k="taper" data-v="yok">Emin değilim</button></div>';
+  else if (w.step === 3) body = '<form id="mmForm" class="stack"><div class="field"><label for="mm">' + (w.gender === 'erkek' ? 'Dişin dış çapı' : 'Deliğin iç çapı') + ' kaç mm?</label>' +
+    '<input type="number" id="mm" step="0.01" min="5" max="40" placeholder="örn. 20,9" required></div>' +
+    '<p class="muted small">Kumpasla ölçün. Konik dişte en geniş yerden alın.</p><div><button class="btn sm" type="submit">Sonucu göster</button></div></form>';
+  else {
+    var c = candidates(w);
+    if (!c.length) body = '<h3>Bu ölçüye yakın bir diş bulamadık.</h3><p class="muted">Ölçüyü yeniden alın ya da fotoğrafı aşağıdaki formdan gönderin.</p>';
+    else {
+      var sure = c[0].diff <= 0.25 && (c.length === 1 || c[1].diff - c[0].diff >= 0.25);
+      body = '<h3>' + (sure ? 'Büyük olasılıkla ' + c[0].name : 'Birden fazla aday var') + '</h3>' +
+        '<p class="muted">' + (sure ? 'Emin olmak için hatveyi sayın: ' + c[0].hint + '.' : 'Hatveyi sayarak ayırabilirsiniz.') + '</p><div>' +
+        c.map(function (x) {
+          var lbl = x.name + ' ' + (w.gender === 'erkek' ? 'erkek' : 'dişi') + ' dişli rakor';
+          return '<div class="cand"><b class="mono" style="font-size:16px">' + x.name + '</b><span class="grow muted small">' + num(x.dia, 2) + ' mm · ' + x.hint + ' · fark ' + num(x.diff, 2) + ' mm</span>' +
+            '<button type="button" class="btn sm ghost" data-act="addc" data-key="tani-' + esc(lbl) + '" data-label="' + esc(lbl) + '" data-detail="Parça tanıma sonucu, ölçülen ' + num(w.mm, 2) + ' mm">Teklife ekle</button></div>';
+        }).join('') + '</div><p class="muted small">Demo kural seti: G, R, NPT ve metrik ince dişlerin yaygın ölçüleri. Canlı sürümde teknik ekibin onayladığı tabloyla çalışır.</p>';
+    }
+  }
+  return head + body + (w.step > 0 ? '<div><button type="button" class="btn sm ghost" data-act="wzreset">Baştan başla</button></div>' : '');
+}
+function vTani() {
+  return '<div class="stack" style="gap:24px"><section class="stack"><h1>Elinizdeki parça ne?</h1>' +
+    '<p class="muted" style="max-width:60ch;font-size:18px">Kodunu bilmeniz gerekmiyor. Ölçüyü girin ya da fotoğrafını gönderin; karşılığını bulalım.</p></section>' +
+    '<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">' +
+      '<div class="card stack" id="wizard">' + vWizard() + '</div>' +
+      '<div class="card stack"><h2>Fotoğraf ekleyin</h2>' +
+        '<label class="drop" for="photo"><span>Parçayı ve varsa etiketini çekin. Yanına cetvel koyarsanız ölçüyü daha iyi okuruz.</span><span class="btn sm ghost">Fotoğraf seç</span></label>' +
+        '<input type="file" id="photo" accept="image/*" multiple hidden>' +
+        '<div class="thumbs" id="thumbs"></div><p class="muted small" id="photoInfo">En fazla 4 fotoğraf. Göndermeden önce küçültülür.</p></div>' +
+    '</section>' +
+    '<section class="card stack"><h2>Uzmana gönderin</h2><p class="muted">Fotoğraflar ve verdiğiniz cevaplar tek e-posta olarak bize ulaşır.</p>' +
+      '<form id="expertForm" class="stack"><div class="grid">' +
+        '<div class="field"><label for="exName">Ad soyad</label><input type="text" id="exName" required></div>' +
+        '<div class="field"><label for="exFirm">Firma</label><input type="text" id="exFirm"></div>' +
+        '<div class="field"><label for="exMail">E-posta</label><input type="email" id="exMail" required></div>' +
+        '<div class="field"><label for="exTel">Telefon</label><input type="text" id="exTel"></div></div>' +
+        '<div class="field"><label for="exNote">Not</label><textarea id="exNote" placeholder="Parça hangi makinede, üzerinde ne yazıyor?"></textarea></div>' +
+        '<div><button class="btn" type="submit">Uzmana gönder</button></div></form>' +
+      '<div id="expertResult"></div></section></div>';
+}
+function fillThumbs() {
+  var t = document.getElementById('thumbs'); if (!t) return;
+  t.innerHTML = S.photos.map(function (p, i) { return '<figure><img src="' + p.data + '" alt="Yüklenen fotoğraf ' + (i + 1) + '"><span>' + p.kb + ' KB</span></figure>'; }).join('');
+  if (S.photos.length) document.getElementById('photoInfo').textContent = S.photos.length + ' fotoğraf hazır. Toplam ' + S.photos.reduce(function (a, p) { return a + p.kb; }, 0) + ' KB.';
+}
+function compress(file) {
+  return new Promise(function (res, rej) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var s = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      var data = c.toDataURL('image/jpeg', 0.8); URL.revokeObjectURL(url);
+      res({ name: file.name.replace(/\.[^.]+$/, '') + '.jpg', data: data, kb: Math.round(data.length * 0.75 / 1024) });
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('okunamadı')); };
+    img.src = url;
+  });
+}
+
+/* ---------- Hesaplama ---------- */
+var PI4 = Math.PI / 4;
+var TOOLS = [
+  { id: 'kuvvet', name: 'Silindir kuvveti', sub: 'İtme ve çekme', formula: 'F = p × A   ·   A(çekme) = π/4 × (D² − d²)',
+    fields: [['D', 'Piston çapı', 'mm', 63], ['d', 'Mil çapı', 'mm', 20], ['p', 'Çalışma basıncı', 'bar', 6]],
+    calc: function (f) {
+      if (f.d >= f.D) return { err: 'Mil çapı piston çapından küçük olmalı.' };
+      var a = PI4 * f.D * f.D, ar = PI4 * (f.D * f.D - f.d * f.d);
+      return { out: [['İtme kuvveti', num(0.1 * f.p * a, 0), 'N'], ['Çekme kuvveti', num(0.1 * f.p * ar, 0), 'N'], ['İtme, yaklaşık', num(0.1 * f.p * a / 9.80665, 0), 'kgf'], ['Piston alanı', num(a / 100, 1), 'cm²']] };
+    }, cat: function (f) { return 'silindir ' + f.D; } },
+  { id: 'hava', name: 'Hava tüketimi', sub: 'Çift etkili pnömatik silindir', formula: 'Q = π/4 × (2D² − d²) × s × n × (p + 1,013) / 1,013',
+    fields: [['D', 'Piston çapı', 'mm', 63], ['d', 'Mil çapı', 'mm', 20], ['s', 'Strok', 'mm', 100], ['n', 'Çevrim sayısı', 'çevrim/dk', 10], ['p', 'Çalışma basıncı', 'bar', 6]],
+    calc: function (f) {
+      if (f.d >= f.D) return { err: 'Mil çapı piston çapından küçük olmalı.' };
+      var q = PI4 * (2 * f.D * f.D - f.d * f.d) * f.s * f.n * (f.p + 1.013) / 1.013 / 1e6;
+      return { out: [['Dakikalık tüketim', num(q, 1), 'Nl/dk'], ['Saatlik tüketim', num(q * 60 / 1000, 2), 'Nm³/sa'], ['Çevrim başına', num(q / f.n, 2), 'Nl']] };
+    } },
+  { id: 'hiz', name: 'Hidrolik silindir hızı', sub: 'Debiden ileri ve geri hız', formula: 'v = Q / A',
+    fields: [['D', 'Piston çapı', 'mm', 80], ['d', 'Mil çapı', 'mm', 45], ['Q', 'Pompa debisi', 'L/dk', 20]],
+    calc: function (f) {
+      if (f.d >= f.D) return { err: 'Mil çapı piston çapından küçük olmalı.' };
+      var q = f.Q * 1e6 / 60, a = PI4 * f.D * f.D, ar = PI4 * (f.D * f.D - f.d * f.d);
+      return { out: [['İleri hız', num(q / a, 0), 'mm/s'], ['Geri hız', num(q / ar, 0), 'mm/s'], ['Geri / ileri oranı', num(a / ar, 2), '×']] };
+    }, cat: function (f) { return 'silindir'; } },
+  { id: 'boru', name: 'Boru ve hortum çapı', sub: 'Debi ve akış hızından iç çap', formula: 'd = √(4Q / (π × v))',
+    fields: [['Q', 'Debi', 'L/dk', 40], ['v', 'Akış hızı', 'm/s', 5]],
+    note: 'Yaygın başlangıç değerleri: emiş hattında 0,5–1,5 m/s, dönüş hattında 2–3 m/s, basınç hattında 3–6 m/s. Kesin değer sistem basıncına göre seçilir.',
+    calc: function (f) {
+      var d = Math.sqrt(4 * (f.Q / 60000) / (Math.PI * f.v)) * 1000;
+      return { out: [['Gereken en küçük iç çap', num(d, 1), 'mm'], ['İnç karşılığı', num(d / 25.4, 2), 'inç']] };
+    }, cat: function () { return 'hortum'; } },
+  { id: 'guc', name: 'Hidrolik güç', sub: 'Pompa için gereken motor gücü', formula: 'P = p × Q / 600   ·   P(motor) = P / η',
+    fields: [['p', 'Çalışma basıncı', 'bar', 160], ['Q', 'Debi', 'L/dk', 30], ['e', 'Toplam verim', '%', 85]],
+    calc: function (f) {
+      if (f.e > 100) return { err: 'Verim en fazla %100 olabilir.' };
+      var p = f.p * f.Q / 600;
+      return { out: [['Hidrolik güç', num(p, 2), 'kW'], ['Gereken motor gücü', num(p / (f.e / 100), 2), 'kW'], ['Beygir gücü karşılığı', num(p / (f.e / 100) / 0.7355, 1), 'BG']] };
+    } },
+  { id: 'birim', name: 'Birim çevirici', sub: 'Basınç, debi, uzunluk', formula: '1 bar = 14,504 psi = 0,1 MPa   ·   1 US gal = 3,785 L   ·   1 inç = 25,4 mm',
+    fields: [['b', 'Basınç', 'bar', 6], ['l', 'Debi', 'L/dk', 20], ['m', 'Uzunluk', 'mm', 25]],
+    calc: function (f) {
+      return { out: [['Basınç', num(f.b * 14.5038, 1), 'psi'], ['Basınç', num(f.b / 10, 2), 'MPa'], ['Debi', num(f.l / 3.78541, 2), 'gpm (US)'], ['Uzunluk', num(f.m / 25.4, 3), 'inç']] };
+    } }
+];
+S.tool = 'kuvvet'; S.tv = {};
+TOOLS.forEach(function (t) { S.tv[t.id] = {}; t.fields.forEach(function (x) { S.tv[t.id][x[0]] = String(x[3]); }); });
+function curTool() { return TOOLS.filter(function (t) { return t.id === S.tool; })[0]; }
+function toolVals(t) {
+  var f = {}, ok = true;
+  t.fields.forEach(function (x) { var v = parseFloat(String(S.tv[t.id][x[0]]).replace(',', '.')); if (!(v > 0)) ok = false; f[x[0]] = v; });
+  return ok ? f : null;
+}
+function vAraclar() {
+  var t = curTool();
+  return '<div class="stack" style="gap:28px"><section class="stack"><span class="eyebrow">Hesaplama araçları</span><h1>Önce hesaplayın, sonra doğru parçayı seçin.</h1>' +
+    '<p class="muted" style="max-width:62ch;font-size:18px">Değerleri değiştirdikçe sonuç anında güncellenir. Sonucu teklif listenize ekleyebilir ya da uygun ürünleri katalogda açabilirsiniz.</p></section>' +
+    '<section class="tools"><nav class="toollist" aria-label="Araçlar">' +
+      TOOLS.map(function (x) { return '<button type="button" data-act="tool" data-v="' + x.id + '" aria-pressed="' + (x.id === t.id) + '"><b>' + x.name + '</b><span>' + x.sub + '</span></button>'; }).join('') +
+    '</nav><div class="card stack toolbody">' +
+      '<div class="row"><h2 class="grow">' + t.name + '</h2><span class="mono muted">' + t.formula + '</span></div>' +
+      '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">' +
+        t.fields.map(function (x) {
+          return '<div class="field"><label for="tf-' + x[0] + '">' + x[1] + '</label><div class="unit"><input type="number" min="0" step="any" inputmode="decimal" id="tf-' + x[0] + '" data-tf="' + x[0] + '" value="' + esc(S.tv[t.id][x[0]]) + '"><span>' + x[2] + '</span></div></div>';
+        }).join('') + '</div>' +
+      '<div class="out" id="toolOut"></div>' +
+      (t.note ? '<p class="muted small">' + t.note + '</p>' : '') +
+      '<p class="muted small">Sonuçlar teorik değerdir; sürtünme, kaçak ve verim kayıpları hariçtir.</p>' +
+      '<div class="row"><button type="button" class="btn" data-act="toolAdd">Hesabı teklife ekle</button>' +
+        (t.cat ? '<button type="button" class="btn ghost" data-act="toolCat">Uygun ürünleri göster</button>' : '') + '</div>' +
+    '</div></section></div>';
+}
+function fillTool() {
+  var box = document.getElementById('toolOut'); if (!box) return;
+  var t = curTool(), f = toolVals(t), r = f ? t.calc(f) : { err: 'Tüm alanlara sıfırdan büyük bir sayı girin.' };
+  box.innerHTML = r.err ? '<div style="grid-column:1/-1"><span class="muted small">Sonuç yok</span><b style="font-size:17px;font-family:var(--sans)">' + r.err + '</b></div>' :
+    r.out.map(function (o) { return '<div><span class="muted small">' + o[0] + '</span><b>' + o[1] + ' <small>' + o[2] + '</small></b></div>'; }).join('');
+}
+
+/* ---------- Devre ---------- */
+var NODES = {
+  kaynak: { x: 0, label: 'Hava kaynağı', title: 'Hava kaynağı', role: 'Devreye basınçlı havayı verir. Kompresör ve hava tankı tarafıdır.', pick: 'Gereken debi ve basınç, hat çapı.', q: 'hortum', icon: '<svg width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="14"></circle><path d="M16 14l12 8-12 8z"></path></svg>' },
+  frl: { x: 180, label: 'Şartlandırıcı', title: 'Şartlandırıcı', role: 'Havayı süzer, basıncı ayarlar ve gerekiyorsa yağlar. Valf ve silindirin ömrünü belirler.', pick: 'Bağlantı ölçüsü, debi, filtre hassasiyeti, yağlayıcı gerekip gerekmediği.', q: 'regülatör', icon: '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M22 6l16 16-16 16L6 22z"></path><path d="M22 6v32" stroke-dasharray="3 3"></path></svg>' },
+  valf: { x: 360, label: '5/2 yön valfi', title: '5/2 yön kontrol valfi', role: 'Havayı silindirin bir tarafına verirken diğer tarafı tahliye eder; silindiri ileri ve geri sürer.', pick: 'Bağlantı ölçüsü, kumanda tipi (bobinli, havalı, kollu), bobin gerilimi, debi.', q: '5/2', icon: '<svg width="60" height="44" viewBox="0 0 60 44"><rect x="6" y="10" width="24" height="24"></rect><rect x="30" y="10" width="24" height="24"></rect><path d="M12 30V16M9 19l3-3 3 3"></path><path d="M24 16v14M21 27l3 3 3-3"></path><path d="M36 30l12-14M36 16l12 14"></path></svg>' },
+  silindir: { x: 540, label: 'Silindir', title: 'Çift etkili silindir', role: 'Hava basıncını doğrusal harekete çevirir; iki yönde de kuvvet uygular.', pick: 'Piston çapı, strok, bağlantı tipi, yastıklama.', q: 'silindir', icon: '<svg width="80" height="44" viewBox="0 0 80 44"><rect x="4" y="12" width="48" height="20"></rect><path d="M22 12v20"></path><path d="M22 22h54"></path></svg>' }
+};
+function vDevre() {
+  var n = NODES[S.node];
+  return '<div class="stack" style="gap:24px"><section class="stack"><h1>Parçayı devrede görün</h1><p class="muted" style="max-width:60ch;font-size:18px">Bir sembole dokunun: ne işe yaradığını, nasıl seçildiğini ve katalogdaki karşılığını gösterelim.</p></section>' +
+    '<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start">' +
+      '<div class="card stack" style="grid-column:span 1"><h2>Çift etkili silindir, temel pnömatik devre</h2><div class="circuitbox"><div class="circuit">' +
+        '<i class="ln" style="left:120px;top:73px;width:60px"></i><i class="ln" style="left:300px;top:73px;width:60px"></i><i class="ln" style="left:480px;top:58px;width:60px"></i><i class="ln ret" style="left:480px;top:90px;width:60px"></i>' +
+        Object.keys(NODES).map(function (k) { return '<button type="button" data-act="node" data-v="' + k + '" aria-pressed="' + (S.node === k) + '" style="left:' + NODES[k].x + 'px">' + NODES[k].icon + '<span>' + NODES[k].label + '</span></button>'; }).join('') +
+      '</div></div><p class="muted small">Koyu çizgi basınç hattı, soluk çizgi dönüş hattıdır.</p>' +
+      '<div><button type="button" class="btn" data-act="circuitAdd">Devrenin malzeme listesini teklife ekle</button></div></div>' +
+      '<aside class="panel stack"><span class="eyebrow" style="color:var(--panel-muted)">Seçili sembol</span><h2>' + n.title + '</h2>' +
+        '<div><div class="muted small">Görevi</div><p>' + n.role + '</p></div><div><div class="muted small">Seçerken bakılacaklar</div><p>' + n.pick + '</p></div>' +
+        '<div><button type="button" class="btn on-panel" data-act="search" data-v="' + n.q + '">Katalogda göster</button></div></aside>' +
+    '</section></div>';
+}
+
+/* ---------- Teklif ---------- */
+function mailPreview(m) {
+  return '<div class="stack"><p><b>' + (m.live ? 'Talebiniz gönderildi.' : 'Demo: e-posta gönderilmedi.') + '</b> ' + (m.live ? '' : 'Canlı sitede e-posta kutumuza aşağıdaki gibi düşecek.') + '</p>' +
+    '<div class="mail"><header><span><span class="muted">Kime:</span> ' + MAIL_TO + '</span><span><span class="muted">Yanıt adresi:</span> ' + esc(m.email) + '</span><b>' + esc(m.subject) + '</b></header><div class="body">' +
+    '<dl>' + m.fields.map(function (f) { return f[1] ? '<dt>' + f[0] + '</dt><dd>' + esc(f[1]) + '</dd>' : ''; }).join('') + '</dl>' +
+    (m.items.length ? '<div class="tablebox" style="border:1px solid var(--line)"><table style="min-width:420px"><thead><tr><th>Kalem</th><th>Adet</th></tr></thead><tbody>' + m.items.map(function (i) { return '<tr><td>' + esc(i.label) + '<br><span class="muted small">' + esc(i.detail) + '</span></td><td class="mono">' + i.qty + '</td></tr>'; }).join('') + '</tbody></table></div>' : '') +
+    (m.photos.length ? '<div><div class="muted small">Ekler (' + m.photos.length + ')</div><div class="thumbs">' + m.photos.map(function (p) { return '<figure><img src="' + p.data + '" alt="Ek fotoğraf"><span>' + esc(p.name) + '</span></figure>'; }).join('') + '</div></div>' : '') +
+    '</div></div></div>';
+}
+function send(m, target) {
+  if (!ENDPOINT) { target.innerHTML = mailPreview(m); return; }
+  target.innerHTML = '<p class="muted">Gönderiliyor…</p>';
+  fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) })
+    .then(function (r) { if (!r.ok) throw new Error(); m.live = true; target.innerHTML = mailPreview(m); })
+    .catch(function () { target.innerHTML = '<p><b>Talep gönderilemedi.</b> Bağlantınızı kontrol edip yeniden deneyin ya da ' + MAIL_TO + ' adresine yazın.</p>'; });
+}
+function vTeklif() {
+  var rows = S.list.map(function (i, n) {
+    return '<tr><td>' + esc(i.label) + '<br><span class="muted small">' + esc(i.detail) + '</span></td><td><input class="qty" type="number" min="1" value="' + i.qty + '" data-qty="' + n + '" id="lq' + n + '" aria-label="Adet"></td>' +
+      '<td style="text-align:right"><button type="button" class="btn sm ghost" data-act="rm" data-v="' + n + '">Çıkar</button></td></tr>';
+  }).join('');
+  return '<div class="stack" style="gap:24px"><h1>Teklif listesi</h1>' +
+    '<div class="tablebox"><table><thead><tr><th>Kalem</th><th>Adet</th><th></th></tr></thead><tbody>' + (rows || '<tr><td colspan="3" class="empty">Liste boş. <a href="#katalog">Katalogdan ekleyin</a> ya da <a href="#tani">parçayı tanıtın</a>.</td></tr>') + '</tbody></table></div>' +
+    '<section class="card stack"><h2>Talebi gönderin</h2><form id="quoteForm" class="stack"><div class="grid">' +
+      '<div class="field"><label for="qName">Ad soyad</label><input type="text" id="qName" required></div>' +
+      '<div class="field"><label for="qFirm">Firma</label><input type="text" id="qFirm" required></div>' +
+      '<div class="field"><label for="qMail">E-posta</label><input type="email" id="qMail" required></div>' +
+      '<div class="field"><label for="qTel">Telefon</label><input type="text" id="qTel"></div></div>' +
+      '<div class="field"><label for="qNote">Not</label><textarea id="qNote" placeholder="Termin beklentisi, teslim yeri, muadil kabul edilir mi?"></textarea></div>' +
+      '<div><button class="btn" type="submit">Teklif iste</button></div></form><div id="quoteResult">' + (S.sent ? mailPreview(S.sent) : '') + '</div></section>' +
+    '<section class="stack"><h2>Teklif takibi</h2><p class="muted" style="max-width:60ch">Sonraki aşamada müşteri girişiyle açılır: gönderilen talepler burada durumlarıyla listelenir, eski teklif tek tıkla yeniden istenir.</p>' +
+      '<div class="row"><span class="pill">Hazırlanıyor</span><span class="pill warn">Onayınızı bekliyor</span><span class="pill ok">Siparişe dönüştü</span></div></section></div>';
+}
+
+/* ---------- Çizim ve olaylar ---------- */
+function render() {
+  var r = route();
+  app.classList.remove('nofade');
+  app.innerHTML = { ana: vAna, katalog: vKatalog, tani: vTani, araclar: vAraclar, devre: vDevre, teklif: vTeklif }[r]();
+  document.querySelectorAll('[data-nav]').forEach(function (a) { if (a.dataset.nav === r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  fillKatalog(); fillThumbs(); fillTool(); updateCount();
+  setSlide(slide); startSlides(); startRig(); reveal();
+  window.scrollTo(0, 0);
+}
+function flash(btn, text) { var old = btn.textContent; btn.textContent = text; setTimeout(function () { btn.textContent = old; }, 1200); }
+
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]'); if (!b) return;
+  var a = b.dataset.act, v = b.dataset.v;
+  if (a === 'cat') { S.cat = v; fillKatalog(); }
+  else if (a === 'stock') { S.onlyStock = !S.onlyStock; fillKatalog(); }
+  else if (a === 'add') {
+    var p = PRODUCTS.filter(function (x) { return x.id === v; })[0];
+    var q = Math.max(1, parseInt(document.getElementById('qty-' + v).value, 10) || 1);
+    addItem(p.id, p.name + ' · ' + p.size, p.code, q); flash(b, 'Eklendi');
+  }
+  else if (a === 'addc') { addItem(b.dataset.key, b.dataset.label, b.dataset.detail, 1); flash(b, 'Eklendi'); }
+  else if (a === 'rm') { S.list.splice(+v, 1); S.sent = null; render(); }
+  else if (a === 'tool') { S.tool = v; var y = window.scrollY; app.classList.add('nofade'); app.innerHTML = vAraclar(); fillTool(); window.scrollTo(0, y); }
+  else if (a === 'toolAdd') {
+    var tl = curTool(), tf = toolVals(tl), tr = tf && tl.calc(tf);
+    if (!tr || tr.err) { flash(b, 'Önce değerleri düzeltin'); return; }
+    addItem('hesap-' + tl.id + '-' + JSON.stringify(tf), tl.name + ': ' + tl.fields.map(function (x) { return x[1].toLocaleLowerCase('tr-TR') + ' ' + num(tf[x[0]], 2).replace(/,00$/, '') + ' ' + x[2]; }).join(', '), 'Hesap sonucu: ' + tr.out[0][0] + ' ' + tr.out[0][1] + ' ' + tr.out[0][2], 1);
+    flash(b, 'Eklendi');
+  }
+  else if (a === 'toolCat') { var tc = curTool(), tcf = toolVals(tc); S.q = tc.cat(tcf || {}); S.cat = 'Tümü'; go('katalog'); }
+  else if (a === 'rigToggle') { RIG.dir = -RIG.dir; RIG.wait = 0; rigState(); }
+  else if (a === 'slide') { setSlide(v === 'prev' ? slide - 1 : v === 'next' ? slide + 1 : +v); startSlides(); }
+  else if (a === 'strip') { var el = document.getElementById(v); el.scrollBy({ left: +b.dataset.dir * el.clientWidth * 0.8, behavior: 'smooth' }); }
+  else if (a === 'catgo') { S.cat = v; S.q = ''; go('katalog'); }
+  else if (a === 'search') { S.q = v; S.cat = 'Tümü'; go('katalog'); }
+  else if (a === 'wz') { S.wiz[b.dataset.k] = v; S.wiz.step += 1; document.getElementById('wizard').innerHTML = vWizard(); }
+  else if (a === 'wzreset') { S.wiz = { step: 0 }; document.getElementById('wizard').innerHTML = vWizard(); }
+  else if (a === 'node') { S.node = v; render(); }
+  else if (a === 'circuitAdd') {
+    addItem('p17', 'Filtre regülatör · G 1/4', 'Devre: temel pnömatik', 1); addItem('p7', '5/2 bobinli yön valfi, 24 V DC · G 1/4', 'Devre: temel pnömatik', 1);
+    addItem('p13', 'Çift etkili pnömatik silindir, strok 100 · Ø63', 'Devre: temel pnömatik', 1); addItem('p18', 'Poliüretan hortum · Ø8', 'Devre: temel pnömatik', 1);
+    flash(b, '4 kalem eklendi');
+  }
+});
+document.addEventListener('input', function (e) {
+  var t = e.target;
+  if (t.dataset.tf) { S.tv[S.tool][t.dataset.tf] = t.value; fillTool(); }
+  else if (t.id === 'q') { S.q = t.value; fillKatalog(); }
+  else if (t.dataset.qty) { S.list[+t.dataset.qty].qty = Math.max(1, parseInt(t.value, 10) || 1); }
+});
+document.addEventListener('change', function (e) {
+  if (e.target.id !== 'photo') return;
+  var files = Array.prototype.slice.call(e.target.files, 0, 4 - S.photos.length);
+  Promise.all(files.map(function (f) { return compress(f).catch(function () { return null; }); })).then(function (out) {
+    S.photos = S.photos.concat(out.filter(Boolean)); fillThumbs();
+  });
+});
+document.addEventListener('submit', function (e) {
+  e.preventDefault();
+  var id = e.target.id, val = function (x) { return (document.getElementById(x) || {}).value || ''; };
+  if (id === 'homeSearch') { S.q = val('homeQ'); S.cat = 'Tümü'; go('katalog'); }
+  else if (id === 'mmForm') { S.wiz.mm = parseFloat(String(val('mm')).replace(',', '.')); S.wiz.step = 4; document.getElementById('wizard').innerHTML = vWizard(); }
+  else if (id === 'expertForm') {
+    var w = S.wiz, ans = w.kind ? [w.kind, w.gender === 'erkek' ? 'erkek diş' : w.gender ? 'dişi diş' : '', w.taper === 'duz' ? 'düz' : w.taper === 'konik' ? 'konik' : '', w.mm ? num(w.mm, 2) + ' mm' : ''].filter(Boolean).join(', ') : '';
+    send({ type: 'tani', subject: 'Parça tanıma talebi: ' + val('exName'), email: val('exMail'),
+      fields: [['Ad soyad', val('exName')], ['Firma', val('exFirm')], ['Telefon', val('exTel')], ['Verilen cevaplar', ans], ['Not', val('exNote')]], items: [], photos: S.photos }, document.getElementById('expertResult'));
+  }
+  else if (id === 'quoteForm') {
+    var res = document.getElementById('quoteResult');
+    if (!S.list.length) { res.innerHTML = '<p><b>Liste boş.</b> Önce en az bir kalem ekleyin.</p>'; return; }
+    S.sent = { type: 'teklif', subject: 'Teklif talebi: ' + val('qFirm') + ' (' + S.list.length + ' kalem)', email: val('qMail'),
+      fields: [['Ad soyad', val('qName')], ['Firma', val('qFirm')], ['Telefon', val('qTel')], ['Not', val('qNote')]], items: S.list.slice(), photos: S.photos };
+    send(S.sent, res);
+  }
+});
+window.addEventListener('hashchange', render);
+render();
+</script>
+
+</body>
+</html>
